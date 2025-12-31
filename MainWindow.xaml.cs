@@ -1,0 +1,313 @@
+﻿using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Text.Json;
+using System.Threading.Tasks;
+using GoogleDriveSync.GoogleDriveHandle;
+using Google.Apis.Drive.v3;
+using System.Windows.Media.Animation;
+namespace GoogleDriveSync
+{
+    public partial class MainWindow : Window
+    {
+        public required ObservableCollection<FileSyncItem> fileSyncItems { get; set; }
+        public const string dataName = "data.json";
+        private DriveService service = null;
+        public MainWindow()
+        {
+            InitializeComponent();
+            InitList();
+            LogIn();
+        }
+
+        #region Init
+        private void InitList()
+        {
+            if (File.Exists(dataName))
+            {
+                try
+                {
+                    string jsonString = File.ReadAllText(dataName);
+                    fileSyncItems = JsonSerializer.Deserialize<ObservableCollection<FileSyncItem>>(jsonString);
+                }
+                catch
+                {
+                    fileSyncItems = new() { };
+                }
+            }
+            else
+            {
+                fileSyncItems = new() { };
+            }
+
+            FileSyncItemList.ItemsSource = fileSyncItems;
+        }
+        #endregion
+
+        #region ButtonEvent
+        private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            var newItem = new FileSyncItem()
+            {
+                Index = (fileSyncItems.Count + 1).ToString(),
+                FilePath = "",
+                Url = "https://",
+            };
+            fileSyncItems.Add(newItem);
+        }
+
+        private void RemoveButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedRow = FileSyncItemList.SelectedItem as FileSyncItem;
+            if (selectedRow != null)
+            {
+                fileSyncItems.Remove(selectedRow);
+                RefreshIndexes();
+            }
+        }
+
+        private async void UploadButton_Click(object sender, RoutedEventArgs e)
+        {
+            UploadButton.IsEnabled = false;
+            DownloadButton.IsEnabled = false;
+            AddButton.IsEnabled = false;
+            RemoveButton.IsEnabled = false;
+            SaveButton.IsEnabled = false;
+
+
+            int totalFolders = fileSyncItems.Count;
+            Progress.Maximum = totalFolders;
+            UpdateProgressSmoothly(0);
+            int currentFolderIndex = 0;
+
+            ProgressText.Content = $"准备开始：共{totalFolders}个文件夹需要同步";
+
+            foreach (var item in fileSyncItems)
+            {
+                currentFolderIndex++;
+                UpdateProgressSmoothly( currentFolderIndex);
+                if (string.IsNullOrEmpty(item.FilePath) || string.IsNullOrEmpty(item.Url))
+                {
+                    continue;
+                }
+                try
+                {
+                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在建立连接...";
+                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在校验文件差异...";
+                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url);
+                    string parentid = DriveHelper.GetFolderIDFromURL(item.Url);
+
+                    int totalDiffs = diffList.Count;
+                    int currentDiffs = 0;
+                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在上传第{currentDiffs}/{totalDiffs}个差异文件：";
+                    foreach (var diff in diffList)
+                    {
+                        if (diff.Status == EStatus.Same) continue;
+                        currentDiffs++;
+                        Action<long, long> updateProgressUI = (completed, total) =>
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                long compeletedMB = (long)(completed / 1024.0 / 1024.0);
+                                long totalMB = (long)(total / 1024.0 / 1024.0);
+                                ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在上传第{currentDiffs}/{totalDiffs}个差异文件：{compeletedMB}MB/{totalMB}MB";
+
+                            });
+                        };
+
+                        switch (diff.Status)
+                        {
+                            case EStatus.UnDownload:
+                                await DriveHelper.DeleteCloudFile(service, diff.CloudFileId);
+                                break;
+                            case EStatus.UnUpload:
+                                await DriveHelper.UploadFile(service, diff.LocalFilePath, parentid, updateProgressUI);
+                                break;
+                            case EStatus.Diff:
+                                await DriveHelper.DeleteCloudFile(service, diff.CloudFileId);
+                                await DriveHelper.UploadFile(service, diff.LocalFilePath, parentid, updateProgressUI);
+                                break;
+                        }
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Upload failed: {ex.Message}");
+                }
+
+            }
+            ProgressText.Content = "所有文件夹同步完成!";
+            UploadButton.IsEnabled = true;
+            DownloadButton.IsEnabled = true;
+            AddButton.IsEnabled = true;
+            RemoveButton.IsEnabled = true;
+            SaveButton.IsEnabled = true;
+        }
+
+        private async void DownloadButton_Click(object sender, RoutedEventArgs e)
+        {
+            UploadButton.IsEnabled = false;
+            DownloadButton.IsEnabled = false;
+            AddButton.IsEnabled = false;
+            RemoveButton.IsEnabled = false;
+            SaveButton.IsEnabled = false;
+
+            int totalFolders = fileSyncItems.Count;
+            Progress.Maximum = totalFolders;
+            UpdateProgressSmoothly(0);
+            int currentFolderIndex = 0;
+
+            ProgressText.Content = $"准备开始：共{totalFolders}个文件夹需要同步";
+
+            foreach (var item in fileSyncItems)
+            {
+                currentFolderIndex++;
+                UpdateProgressSmoothly(currentFolderIndex);
+
+                if (string.IsNullOrEmpty(item.FilePath) || string.IsNullOrEmpty(item.Url))
+                {
+                    continue;
+                }
+                try
+                {
+                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在建立连接...";
+                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在校验文件差异...";
+                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url);
+                    string parentid = DriveHelper.GetFolderIDFromURL(item.Url);
+
+                    int totalDiffs = diffList.Count;
+                    int currentDiffs = 0;
+                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在下载第{currentDiffs}/{totalDiffs}个差异文件：";
+                    foreach (var diff in diffList)
+                    {
+                        if (diff.Status == EStatus.Same) continue;
+                        currentDiffs++;
+                        Action<long, long> updateProgressUI = (completed, total) =>
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                long compeletedMB = (long)(completed / 1024.0 / 1024.0);
+                                long totalMB = (long)(total / 1024.0 / 1024.0);
+
+                                ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在下载第{currentDiffs}/{totalDiffs}个差异文件：{compeletedMB}MB/{totalMB}MB";
+
+
+                            });
+                        };
+
+                        switch (diff.Status)
+                        {
+                            case EStatus.UnDownload:
+                                await DriveHelper.DownloadFile(service, diff.CloudFileId, diff.LocalFilePath, diff.Size, updateProgressUI);
+                                break;
+                            case EStatus.UnUpload:
+                                if (File.Exists(diff.LocalFilePath))
+                                {
+                                    File.Delete(diff.LocalFilePath);
+                                }
+                                break;
+                            case EStatus.Diff:
+                                if (File.Exists(diff.LocalFilePath))
+                                {
+                                    File.Delete(diff.LocalFilePath);
+                                }
+                                await DriveHelper.DownloadFile(service, diff.CloudFileId, diff.LocalFilePath, diff.Size, updateProgressUI);
+                                break;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Download failed: {ex.Message}");
+                }
+            }
+            ProgressText.Content = "所有文件夹同步完成!";
+            UploadButton.IsEnabled = true;
+            DownloadButton.IsEnabled = true;
+            AddButton.IsEnabled = true;
+            RemoveButton.IsEnabled = true;
+            SaveButton.IsEnabled = true;
+        }
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (fileSyncItems.Count == 0)
+            {
+                return;
+            }
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(fileSyncItems, options);
+                File.WriteAllText(dataName, jsonString);
+
+                MessageBox.Show("Save Successfully!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed:" + ex.Message);
+            }
+        }
+        private void LogInButton_Click(object sender, RoutedEventArgs e)
+        {
+            LogIn();
+        }
+        #endregion
+
+        #region Common Methods
+
+        void RefreshIndexes()
+        {
+            for (int i = 0; i < fileSyncItems.Count; i++)
+            {
+                fileSyncItems[i].Index = (i + 1).ToString();
+            }
+            FileSyncItemList.Items.Refresh();
+        }
+        async void LogIn()
+        {
+            if (service == null)
+            {
+                try
+                {
+                    UploadButton.IsEnabled = false;
+                    DownloadButton.IsEnabled = false;
+                    service = await DriveHelper.GetDriveService();
+                    LogInButton.Visibility = Visibility.Collapsed;
+                    UploadButton.IsEnabled = true;
+                    DownloadButton.IsEnabled = true;
+                    MessageBox.Show("Log in successfully!");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed:" + ex.Message);
+                }
+            }
+        }
+
+        void UpdateProgressSmoothly(double targetValue,int time=1000)
+        {
+            if(targetValue<Progress.Value)
+            {
+                Progress.BeginAnimation(ProgressBar.ValueProperty, null);
+                Progress.Value= targetValue;
+                return;
+            }
+            DoubleAnimation animation=new DoubleAnimation(targetValue,TimeSpan.FromMilliseconds(time));
+            animation.EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut };
+            Progress.BeginAnimation(ProgressBar.ValueProperty,animation);
+        }
+
+        #endregion
+
+    }
+}
