@@ -77,12 +77,7 @@ namespace GoogleDriveSync
 
         private async void UploadButton_Click(object sender, RoutedEventArgs e)
         {
-            UploadButton.IsEnabled = false;
-            DownloadButton.IsEnabled = false;
-            AddButton.IsEnabled = false;
-            RemoveButton.IsEnabled = false;
-            SaveButton.IsEnabled = false;
-
+            SetButtonsActive(false);
 
             int totalFolders = fileSyncItems.Count;
             Progress.Maximum = totalFolders;
@@ -147,20 +142,12 @@ namespace GoogleDriveSync
 
             }
             ProgressText.Content = "所有文件夹同步完成!";
-            UploadButton.IsEnabled = true;
-            DownloadButton.IsEnabled = true;
-            AddButton.IsEnabled = true;
-            RemoveButton.IsEnabled = true;
-            SaveButton.IsEnabled = true;
+            SetButtonsActive(true);
         }
 
         private async void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
-            UploadButton.IsEnabled = false;
-            DownloadButton.IsEnabled = false;
-            AddButton.IsEnabled = false;
-            RemoveButton.IsEnabled = false;
-            SaveButton.IsEnabled = false;
+            SetButtonsActive(false);
 
             int totalFolders = fileSyncItems.Count;
             Progress.Maximum = totalFolders;
@@ -232,11 +219,7 @@ namespace GoogleDriveSync
                 }
             }
             ProgressText.Content = "所有文件夹同步完成!";
-            UploadButton.IsEnabled = true;
-            DownloadButton.IsEnabled = true;
-            AddButton.IsEnabled = true;
-            RemoveButton.IsEnabled = true;
-            SaveButton.IsEnabled = true;
+            SetButtonsActive(true);
         }
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
@@ -305,6 +288,16 @@ namespace GoogleDriveSync
             DoubleAnimation animation=new DoubleAnimation(targetValue,TimeSpan.FromMilliseconds(time));
             animation.EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut };
             Progress.BeginAnimation(ProgressBar.ValueProperty,animation);
+        }
+
+        void SetButtonsActive(bool b)
+        {
+            UploadButton.IsEnabled = b;
+            DownloadButton.IsEnabled = b;
+            AddButton.IsEnabled = b;
+            RemoveButton.IsEnabled = b;
+            SaveButton.IsEnabled = b;
+
         }
 
         #endregion
