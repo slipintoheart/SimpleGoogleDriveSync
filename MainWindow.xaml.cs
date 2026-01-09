@@ -329,5 +329,21 @@ namespace GoogleDriveSync
 
         #endregion
 
+        #region WindowButtonEvent
+        private void TitleBar_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            {
+                this.DragMove();
+            }
+        }
+
+        private void CloseButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        #endregion
+
     }
 }

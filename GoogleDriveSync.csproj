@@ -9,8 +9,34 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Img\Button_BackGround.png" />
+    <None Remove="Img\Button_Download.png" />
+    <None Remove="Img\Button_LogIn.png" />
+    <None Remove="Img\Button_Save.png" />
+    <None Remove="Img\Button_Upload.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.73.0.3996" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Img\Button_BackGround.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Img\Button_Download.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Img\Button_LogIn.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Img\Button_Save.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Img\Button_Upload.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
