@@ -335,7 +335,7 @@ namespace GoogleDriveSync.GoogleDriveHandle
 
             var request = service.Files.List();
             request.PageSize = 1000;
-            request.Q = $"'{folderId}' in parents and trashed = false";
+            request.Q = $"'{folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'";
             request.Fields = "files(id, name, md5Checksum, size)";
 
             var result = await request.ExecuteAsync();
