@@ -88,7 +88,6 @@ namespace GoogleDriveSync
             foreach (var item in fileSyncItems)
             {
                 currentFolderIndex++;
-                UpdateProgressSmoothly(currentFolderIndex);
                 if (string.IsNullOrEmpty(item.FilePath) || string.IsNullOrEmpty(item.Url))
                 {
                     continue;
@@ -113,7 +112,17 @@ namespace GoogleDriveSync
                                 long compeletedMB = (long)(completed / 1024.0 / 1024.0);
                                 long totalMB = (long)(total / 1024.0 / 1024.0);
                                 ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在上传第{currentDiffs}/{totalDiffs}个差异文件：{compeletedMB}MB/{totalMB}MB";
-
+                                if (totalMB > 0 )
+                                {
+                                    UpdateProgressSmoothly((currentFolderIndex - 1) +
+                                        (double)(((double)currentDiffs - 1) / (double)totalDiffs) + 
+                                        ((double)((double)compeletedMB / (double)totalMB))*(double)(1/(double)totalDiffs))
+                                        ;
+                                }
+                                else
+                                {
+                                    UpdateProgressSmoothly((currentFolderIndex - 1) + (double)(((double)currentDiffs-1)/ (double)totalDiffs));
+                                }
                             });
                         };
 
@@ -131,12 +140,15 @@ namespace GoogleDriveSync
                                 break;
                         }
 
+                        UpdateProgressSmoothly((currentFolderIndex - 1) + (double)((double)currentDiffs / (double)totalDiffs));
+
                     }
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Upload failed: {ex.Message}");
                 }
+                UpdateProgressSmoothly(currentFolderIndex);
             }
             UpdateProgressSmoothly(totalFolders);
             ProgressText.Content = "所有文件夹同步完成!";
@@ -157,7 +169,6 @@ namespace GoogleDriveSync
             foreach (var item in fileSyncItems)
             {
                 currentFolderIndex++;
-                UpdateProgressSmoothly(currentFolderIndex);
 
                 if (string.IsNullOrEmpty(item.FilePath) || string.IsNullOrEmpty(item.Url))
                 {
@@ -185,6 +196,17 @@ namespace GoogleDriveSync
 
                                 ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在下载第{currentDiffs}/{totalDiffs}个差异文件：{compeletedMB}MB/{totalMB}MB";
 
+                                if (totalMB > 0)
+                                {
+                                    UpdateProgressSmoothly((currentFolderIndex - 1) +
+                                        (double)(((double)currentDiffs - 1) / (double)totalDiffs) +
+                                        ((double)((double)compeletedMB / (double)totalMB)) * (double)(1 / (double)totalDiffs))
+                                        ;
+                                }
+                                else
+                                {
+                                    UpdateProgressSmoothly((currentFolderIndex - 1) + (double)(((double)currentDiffs - 1) / (double)totalDiffs));
+                                }
 
                             });
                         };
@@ -208,13 +230,18 @@ namespace GoogleDriveSync
                                 await DriveHelper.DownloadFile(service, diff.CloudFileId, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), diff.Size, updateProgressUI);
                                 break;
                         }
+
+                        UpdateProgressSmoothly((currentFolderIndex - 1) + (double)((double)currentDiffs / (double)totalDiffs));
+
                     }
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Download failed: {ex.Message}");
                 }
+                UpdateProgressSmoothly(currentFolderIndex);
             }
+            UpdateProgressSmoothly(totalFolders);
             ProgressText.Content = "所有文件夹同步完成!";
             SetButtonsActive(true);
         }
