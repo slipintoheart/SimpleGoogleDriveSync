@@ -7,7 +7,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
@@ -98,7 +97,7 @@ namespace GoogleDriveSync
                 {
                     ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在建立连接...";
                     ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在校验文件差异...";
-                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url);
+                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url, IsIncludesSubfoldersCheckBox.IsChecked==true,true);
                     string parentid = DriveHelper.GetFolderIDFromURL(item.Url);
 
                     int totalDiffs = diffList.Count;
@@ -125,11 +124,11 @@ namespace GoogleDriveSync
                                 await DriveHelper.DeleteCloudFile(service, diff.CloudFileId);
                                 break;
                             case EStatus.UnUpload:
-                                await DriveHelper.UploadFile(service, diff.LocalFilePath, parentid, updateProgressUI);
+                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath,diff.RelativePath,diff.FileName), parentid, updateProgressUI);
                                 break;
                             case EStatus.Diff:
                                 await DriveHelper.DeleteCloudFile(service, diff.CloudFileId);
-                                await DriveHelper.UploadFile(service, diff.LocalFilePath, parentid, updateProgressUI);
+                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), parentid, updateProgressUI);
                                 break;
                         }
 
@@ -195,20 +194,24 @@ namespace GoogleDriveSync
                         switch (diff.Status)
                         {
                             case EStatus.UnDownload:
-                                await DriveHelper.DownloadFile(service, diff.CloudFileId, diff.LocalFilePath, diff.Size, updateProgressUI);
+                                if(!Directory.Exists(Path.Combine(item.FilePath, diff.RelativePath)))
+                                {
+                                    Directory.CreateDirectory(Path.Combine(item.FilePath, diff.RelativePath));
+                                }
+                                await DriveHelper.DownloadFile(service, diff.CloudFileId, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), diff.Size, updateProgressUI);
                                 break;
                             case EStatus.UnUpload:
-                                if (File.Exists(diff.LocalFilePath))
+                                if (File.Exists(Path.Combine(item.FilePath, diff.RelativePath, diff.FileName)))
                                 {
-                                    File.Delete(diff.LocalFilePath);
+                                    File.Delete(Path.Combine(item.FilePath, diff.RelativePath, diff.FileName));
                                 }
                                 break;
                             case EStatus.Diff:
-                                if (File.Exists(diff.LocalFilePath))
+                                if (File.Exists(Path.Combine(item.FilePath, diff.RelativePath, diff.FileName)))
                                 {
-                                    File.Delete(diff.LocalFilePath);
+                                    File.Delete(Path.Combine(item.FilePath, diff.RelativePath, diff.FileName));
                                 }
-                                await DriveHelper.DownloadFile(service, diff.CloudFileId, diff.LocalFilePath, diff.Size, updateProgressUI);
+                                await DriveHelper.DownloadFile(service, diff.CloudFileId, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), diff.Size, updateProgressUI);
                                 break;
                         }
                     }

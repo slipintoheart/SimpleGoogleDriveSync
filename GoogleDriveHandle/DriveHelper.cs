@@ -69,85 +69,95 @@ namespace GoogleDriveSync.GoogleDriveHandle
             return service;
         }
 
-        public static async Task<List<SyncDiffItem>> AnalyzeDifferences(DriveService service, string localFolderPath, string cloudFolderUrl)
+        public static async Task<List<SyncDiffItem>> AnalyzeDifferences(DriveService service,string localFolderPath,string cloudFolderUrl,bool IsIncludingSubfolders=false,bool isUpload=false)
         {
-            var resultList = new List<SyncDiffItem>();
+            var resultList=new List<SyncDiffItem>();
 
-            if (!Directory.Exists(localFolderPath))
+            var localmap =await GetLocalMapResult(localFolderPath, IsIncludingSubfolders);
+            var cloudMap =await GetCloudMapresult(service,cloudFolderUrl,IsIncludingSubfolders);
+
+            foreach (var localFile in localmap)
             {
-                MessageBox.Show("Can not find local Folder!");
-                throw new Exception("Can not find local Folder!");
-            }
-
-            string cloudFolderId = GetFolderIDFromURL(cloudFolderUrl);
-            if (string.IsNullOrEmpty(cloudFolderId))
-            {
-                MessageBox.Show("Can not find Cloud Folder ID!");
-                throw new Exception("Can not find Cloud Folder ID!");
-            }
-
-            var localFilesTask = Task.Run(() => GetLocalFilesMap(localFolderPath));
-            var cloudFilesTask = GetCloudFilesMap(service, cloudFolderId);
-
-            await Task.WhenAll(localFilesTask, cloudFilesTask);
-
-            var localMap = localFilesTask.Result;
-            var cloudMap = cloudFilesTask.Result;
-
-            foreach (var localFile in localMap)
-            {
-                string fileName = localFile.Key;
-                var localInfo = localFile.Value;
-
                 var item = new SyncDiffItem
                 {
-                    FileName = fileName,
-                    LocalFilePath = localInfo.Path,
-                    LocalMD5 = localInfo.MD5,
-                    Size=localInfo.Size,
+                    FileName= localFile.Key.fileName,
+                    RelativePath=localFile.Key.filePath,
+                    LocalMD5=localFile.Value.MD5,
+                    Size=localFile.Value.Size,
                 };
-                if (cloudMap.ContainsKey(fileName))
+                if(cloudMap.ContainsKey(localFile.Key))
                 {
-                    var cloudInfo = cloudMap[fileName];
-                    item.CloudFileId = cloudInfo.Id;
-                    item.CloudMD5 = cloudInfo.MD5;
-                    item.Size=cloudInfo.Size;
+                    var cloudInfo=cloudMap[localFile.Key];
 
-                    if (item.LocalMD5 == item.CloudMD5)
+                    item.CloudFileId = cloudInfo.id;
+                    item.CloudMD5 = cloudInfo.Md5;
+                    item.Size= isUpload ? item.Size : cloudInfo.Size;
+
+                    if(item.LocalMD5==item.CloudMD5)
                     {
                         item.Status = EStatus.Same;
                     }
                     else
                     {
-                        item.Status = EStatus.Diff;
+                        item.Status=EStatus.Diff;
                     }
-
-                    cloudMap.Remove(fileName);
                 }
                 else
                 {
-                    item.Status = EStatus.UnUpload; // Local Only
+                    item.Status = EStatus.UnUpload;
                 }
-
                 resultList.Add(item);
             }
-            foreach (var cloudFile in cloudMap)
+            foreach(var cloudFile in cloudMap)
             {
-                var item = new SyncDiffItem
+                if(!localmap.ContainsKey(cloudFile.Key))
                 {
-                    FileName = cloudFile.Key,
-                    CloudFileId = cloudFile.Value.Id,
-                    CloudMD5 = cloudFile.Value.MD5,
-                    LocalFilePath = Path.Combine(localFolderPath, cloudFile.Key),
-                    Status = EStatus.UnDownload, // Cloud Only
-                    Size=cloudFile.Value.Size
-                };
-                resultList.Add(item);
+                    var item = new SyncDiffItem
+                    {
+                        FileName= cloudFile.Key.fileName,
+                        RelativePath=cloudFile.Key.filePath,
+                        CloudMD5=cloudFile.Value.Md5,
+                        CloudFileId= cloudFile.Value.id,
+                        Status= EStatus.UnDownload,
+                        Size=cloudFile.Value.Size,
+                    };
+                    resultList.Add(item);
+                }
             }
-
-
             return resultList;
         }
+
+        #region AnalyzeDifference Common Methods
+        static async Task<Dictionary<(string filePath, string fileName), (string MD5, long Size)>> GetLocalMapResult(string localFolderPath,bool isIncludingSubfolders=false)
+        {
+            if (!Directory.Exists(localFolderPath))
+            {
+                MessageBox.Show("Cannot Find Local Folder!");
+                throw new Exception("Cannot Find Local Folder!");
+            }
+            var localFilesTask = Task.Run<Dictionary<(string, string), (string, long)>>(isIncludingSubfolders ? () => GetAllLocalFilesMap(localFolderPath) : () => GetLocalFilesMap(localFolderPath));
+
+            await Task.WhenAll(localFilesTask);
+            var localMap = localFilesTask.Result;
+            return localMap;
+        }
+        static async Task<Dictionary<(string filePath,string fileName),(string id,string Md5,long Size)>> GetCloudMapresult(DriveService service,string url,bool isIncludingSubfolders=false)
+        {
+
+            string cloudFolderId = GetFolderIDFromURL(url);
+            if (string.IsNullOrEmpty(cloudFolderId))
+            {
+                MessageBox.Show("Cannot Find Cloud Folder ID");
+                throw new Exception("Cannot Find Local Folder!");
+            }
+            var cloudFilesTask = isIncludingSubfolders ? GetCloudFilesMap(service, cloudFolderId) : GetAllCloudFilesMap(service, cloudFolderId);
+
+            await Task.WhenAll(cloudFilesTask);
+            var cloudMap = cloudFilesTask.Result;
+            return cloudMap;
+        }
+        #endregion
+
 
         public static async Task DeleteCloudFile(DriveService service, string folderId)
         {
@@ -161,7 +171,7 @@ namespace GoogleDriveSync.GoogleDriveHandle
                 MessageBox.Show($"Delete Failed:{ex.Message}");
             }
         }
-        public static async Task UploadFile(DriveService service, string localFilePath, string parentFolderId,Action<long,long> progressCallback=null)
+        public static async Task UploadFile(DriveService service, string localFilePath, string parentFolderId, Action<long, long> progressCallback = null)
         {
             if (!File.Exists(localFilePath)) return;
 
@@ -176,18 +186,18 @@ namespace GoogleDriveSync.GoogleDriveHandle
                 var request = service.Files.Create(fileMetadata, stream, "application/octet-stream");
                 request.Fields = "id";
 
-                if(progressCallback != null)
+                if (progressCallback != null)
                 {
                     request.ProgressChanged += (uploadProgress) =>
                     {
-                        progressCallback(uploadProgress.BytesSent,stream.Length);
+                        progressCallback(uploadProgress.BytesSent, stream.Length);
                     };
                 }
                 await request.UploadAsync();
             }
         }
 
-        public static async Task DownloadFile(DriveService service, string fileId, string filePath,long totalBytes, Action<long, long> progressCallback = null)
+        public static async Task DownloadFile(DriveService service, string fileId, string filePath, long totalBytes, Action<long, long> progressCallback = null)
         {
             if (string.IsNullOrEmpty(fileId)) return;
             try
@@ -196,7 +206,7 @@ namespace GoogleDriveSync.GoogleDriveHandle
 
                 request.MediaDownloader.ProgressChanged += (downloadProgress) =>
                 {
-                    if(progressCallback != null)
+                    if (progressCallback != null)
                     {
                         progressCallback(downloadProgress.BytesDownloaded, totalBytes);
                     }
@@ -240,26 +250,64 @@ namespace GoogleDriveSync.GoogleDriveHandle
             var result = await listRequest.ExecuteAsync();
             return result.Files;
         }
-        static Dictionary<string, (string Path, string MD5, long Size)> GetLocalFilesMap(string folderPath)
+        static Dictionary<(string filePath, string fileName), (string MD5, long Size)> GetLocalFilesMap(string folderPath)
         {
-            var map = new Dictionary<string, (string, string, long)>();
+            var map = new Dictionary<(string, string), (string, long)>();
             var files = Directory.GetFiles(folderPath);
 
             foreach (var filePath in files)
             {
                 string fileName = Path.GetFileName(filePath);
                 string md5 = GetLocalMD5(filePath);
-                var info=new FileInfo(filePath);
-                if (!map.ContainsKey(fileName))
+                var info = new FileInfo(filePath);
+                long size = info.Length;
+
+                var key = (string.Empty, fileName);
+                var value = (md5, info.Length);
+
+                if (!map.ContainsKey(key))
                 {
-                    map.Add(fileName, (filePath, md5,info.Length));
+                    map.Add(key, value);
                 }
             }
             return map;
         }
-        static async Task<Dictionary<string, (string Id, string MD5 ,long Size)>> GetCloudFilesMap(DriveService service, string folderId)
+
+        static Dictionary<(string filePath, string fileName), (string MD5, long Size)> GetAllLocalFilesMap(string folderPath)
         {
-            var map = new Dictionary<string, (string, string, long)>();
+            var map = new Dictionary<(string, string), (string, long)>();
+
+            var files = Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories);
+
+            foreach (var fullPath in files)
+            {
+                var fileInfo = new FileInfo(fullPath);
+
+                string fileName = Path.GetFileName(fullPath);
+
+                string fileDirectory = Path.GetDirectoryName(fullPath);
+
+                string relativePath = (fileDirectory == null) ? string.Empty : Path.GetRelativePath(folderPath, fileDirectory);
+
+                string md5 = GetLocalMD5(fullPath);
+                long size = fileInfo.Length;
+
+                var key = (relativePath == "." ? "" : relativePath.Replace("\\", "/"), fileName);
+                var value = (md5, size);
+                if (!map.ContainsKey(key))
+                {
+                    map.Add(key, value);
+                }
+            }
+
+            return map;
+
+        }
+
+
+        static async Task<Dictionary<(string filePath, string fileName), (string Id, string MD5, long Size)>> GetCloudFilesMap(DriveService service, string folderId)
+        {
+            var map = new Dictionary<(string filePath, string fileName), (string Id, string MD5, long Size)>();
 
             var request = service.Files.List();
             request.PageSize = 1000;
@@ -271,22 +319,79 @@ namespace GoogleDriveSync.GoogleDriveHandle
             {
                 foreach (var file in result.Files)
                 {
-                    if (!string.IsNullOrEmpty(file.Name) && !map.ContainsKey(file.Name))
+                    var key = (string.Empty, file.Name);
+                    if (!string.IsNullOrEmpty(file.Name) && !map.ContainsKey(key))
                     {
                         long size = file.Size.HasValue ? file.Size.Value : 0;
-                        map.Add(file.Name, (file.Id, file.Md5Checksum, size));
+                        map.Add(key, (file.Id, file.Md5Checksum, size));
                     }
                 }
             }
             return map;
         }
+
+        static async Task<Dictionary<(string filePath, string fileName), (string Id, string MD5, long Size)>> GetAllCloudFilesMap(DriveService service, string folderId, string relativePath = "")
+        {
+            var map = new Dictionary<(string filePath, string fileName), (string Id, string MD5, long Size)>();
+
+            var request = service.Files.List();
+            request.PageSize = 1000;
+            request.Q = $"'{folderId}' in parents and trashed = false";
+            request.Fields = "nextPageToken, files(id, name, mimeType, md5Checksum, size)";
+
+            string pageToken = null;
+            do
+            {
+                request.PageToken = pageToken;
+                var result = await request.ExecuteAsync();
+
+                if (result.Files != null)
+                {
+                    foreach (var file in result.Files)
+                    {
+                        if (string.IsNullOrEmpty(file.Name)) continue;
+
+                        if (file.MimeType == "application/vnd.google-apps.folder")
+                        {
+                            string subPath = System.IO.Path.Combine(relativePath, file.Name);
+
+                            var subMap = await GetAllCloudFilesMap(service, file.Id, subPath);
+
+                            foreach (var kvp in subMap)
+                            {
+                                if (!map.ContainsKey(kvp.Key))
+                                {
+                                    map.Add(kvp.Key, kvp.Value);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var key = (relativePath.Replace("\\","/"), file.Name);
+
+                            if (!map.ContainsKey(key))
+                            {
+                                string md5 = file.Md5Checksum ?? string.Empty;
+                                long size = file.Size.HasValue ? file.Size.Value : 0;
+
+                                map.Add(key, (file.Id, md5, size));
+                            }
+                        }
+                    }
+                }
+            } while (pageToken != null);
+
+            return map;
+        }
+
+
         #endregion
     }
 
     public class SyncDiffItem
     {
         public string FileName { get; set; }
-        public string LocalFilePath { get; set; }
+        public string RelativePath { get; set; }
         public string CloudFileId { get; set; }
         public string LocalMD5 { get; set; }
         public string CloudMD5 { get; set; }
