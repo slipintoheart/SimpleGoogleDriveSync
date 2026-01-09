@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:GoogleDriveSync"
         mc:Ignorable="d"
         Title="GoogleDrive同步助手" Height="450" Width="800" WindowStyle="None" AllowsTransparency="True" Background="{x:Null}"
-    xmlns:System="clr-namespace:System;assembly=System.Runtime">
+    xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/Img/Icon.ico">
     <Window.Resources>
         <System:Double x:Key="ButtonWidth">60</System:Double>
         <ImageBrush x:Key="ButtonBackground" ImageSource="/Img/Button_BackGround.png"/>
