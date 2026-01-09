@@ -124,11 +124,11 @@ namespace GoogleDriveSync
                                 await DriveHelper.DeleteCloudFile(service, diff.CloudFileId);
                                 break;
                             case EStatus.UnUpload:
-                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath,diff.RelativePath,diff.FileName), parentid, updateProgressUI);
+                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath,diff.RelativePath,diff.FileName), parentid,diff.RelativePath ,updateProgressUI);
                                 break;
                             case EStatus.Diff:
                                 await DriveHelper.DeleteCloudFile(service, diff.CloudFileId);
-                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), parentid, updateProgressUI);
+                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), parentid,diff.RelativePath ,updateProgressUI);
                                 break;
                         }
 
@@ -140,6 +140,7 @@ namespace GoogleDriveSync
                 }
 
             }
+
             ProgressText.Content = "所有文件夹同步完成!";
             SetButtonsActive(true);
         }
@@ -168,7 +169,7 @@ namespace GoogleDriveSync
                 {
                     ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在建立连接...";
                     ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在校验文件差异...";
-                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url);
+                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url, IsIncludesSubfoldersCheckBox.IsChecked == true,false);
                     string parentid = DriveHelper.GetFolderIDFromURL(item.Url);
 
                     int totalDiffs = diffList.Count;
@@ -194,10 +195,6 @@ namespace GoogleDriveSync
                         switch (diff.Status)
                         {
                             case EStatus.UnDownload:
-                                if(!Directory.Exists(Path.Combine(item.FilePath, diff.RelativePath)))
-                                {
-                                    Directory.CreateDirectory(Path.Combine(item.FilePath, diff.RelativePath));
-                                }
                                 await DriveHelper.DownloadFile(service, diff.CloudFileId, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), diff.Size, updateProgressUI);
                                 break;
                             case EStatus.UnUpload:
