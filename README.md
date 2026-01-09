@@ -8,7 +8,7 @@
 
 
 
-> ⚠️ ** Important**
+> ⚠️ ** Important **
 >
 > 出于 Google API 的安全策略及隐私保护，本开源项目源码**不包含**`client_secret.json` 私钥文件。
 > 如果要运行此源码，须自行申请 Google API 凭证。
