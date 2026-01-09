@@ -2,7 +2,8 @@
 
 这是一个基于 **WPF** 框架构建的简单Google 云端硬盘同步工具，可以一键同步本地文件夹和云端文件夹。
 
-<img width="800" height="450" alt="image" src="https://github.com/user-attachments/assets/1d79bf59-b9dd-43f0-b99b-499f8137fbe5" />
+<img width="800" height="450" alt="image" src="https://github.com/user-attachments/assets/7c35075e-b04a-4494-99cd-722b396d1cf4" />
+
 
 
 
@@ -87,7 +88,6 @@
 | **云端缺失** | **删除**：删除本地对应的多余文件 |
 | **本地缺失** | **新增**：直接下载云端文件至本地 |
 
-#### 进度条会显示同步进度，等待同步完成即可：
-<img width="778" height="443" alt="image" src="https://github.com/user-attachments/assets/6120c328-e30a-4a6e-86d2-4c2fc2614485" />
+#### 进度条会显示同步进度，等待同步完成即可。
 
 ---
