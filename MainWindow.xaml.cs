@@ -88,16 +88,15 @@ namespace GoogleDriveSync
             foreach (var item in fileSyncItems)
             {
                 currentFolderIndex++;
-                UpdateProgressSmoothly( currentFolderIndex);
+                UpdateProgressSmoothly(currentFolderIndex);
                 if (string.IsNullOrEmpty(item.FilePath) || string.IsNullOrEmpty(item.Url))
                 {
                     continue;
                 }
                 try
                 {
-                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在建立连接...";
                     ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在校验文件差异...";
-                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url, IsIncludesSubfoldersCheckBox.IsChecked==true,true);
+                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url, IsIncludesSubfoldersCheckBox.IsChecked == true, true);
                     string parentid = DriveHelper.GetFolderIDFromURL(item.Url);
 
                     int totalDiffs = diffList.Count;
@@ -124,11 +123,11 @@ namespace GoogleDriveSync
                                 await DriveHelper.DeleteCloudFile(service, diff.CloudFileId);
                                 break;
                             case EStatus.UnUpload:
-                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath,diff.RelativePath,diff.FileName), parentid,diff.RelativePath ,updateProgressUI);
+                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), parentid, diff.RelativePath, updateProgressUI);
                                 break;
                             case EStatus.Diff:
                                 await DriveHelper.DeleteCloudFile(service, diff.CloudFileId);
-                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), parentid,diff.RelativePath ,updateProgressUI);
+                                await DriveHelper.UploadFile(service, Path.Combine(item.FilePath, diff.RelativePath, diff.FileName), parentid, diff.RelativePath, updateProgressUI);
                                 break;
                         }
 
@@ -138,9 +137,8 @@ namespace GoogleDriveSync
                 {
                     MessageBox.Show($"Upload failed: {ex.Message}");
                 }
-
             }
-
+            UpdateProgressSmoothly(totalFolders);
             ProgressText.Content = "所有文件夹同步完成!";
             SetButtonsActive(true);
         }
@@ -167,9 +165,8 @@ namespace GoogleDriveSync
                 }
                 try
                 {
-                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在建立连接...";
                     ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在校验文件差异...";
-                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url, IsIncludesSubfoldersCheckBox.IsChecked == true,false);
+                    var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url, IsIncludesSubfoldersCheckBox.IsChecked == true, false);
                     string parentid = DriveHelper.GetFolderIDFromURL(item.Url);
 
                     int totalDiffs = diffList.Count;
@@ -221,6 +218,9 @@ namespace GoogleDriveSync
             ProgressText.Content = "所有文件夹同步完成!";
             SetButtonsActive(true);
         }
+
+
+
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             if (fileSyncItems.Count == 0)
@@ -277,17 +277,17 @@ namespace GoogleDriveSync
             }
         }
 
-        void UpdateProgressSmoothly(double targetValue,int time=1000)
+        void UpdateProgressSmoothly(double targetValue, int time = 1000)
         {
-            if(targetValue<Progress.Value)
+            if (targetValue < Progress.Value)
             {
                 Progress.BeginAnimation(ProgressBar.ValueProperty, null);
-                Progress.Value= targetValue;
+                Progress.Value = targetValue;
                 return;
             }
-            DoubleAnimation animation=new DoubleAnimation(targetValue,TimeSpan.FromMilliseconds(time));
+            DoubleAnimation animation = new DoubleAnimation(targetValue, TimeSpan.FromMilliseconds(time));
             animation.EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut };
-            Progress.BeginAnimation(ProgressBar.ValueProperty,animation);
+            Progress.BeginAnimation(ProgressBar.ValueProperty, animation);
         }
 
         void SetButtonsActive(bool b)
