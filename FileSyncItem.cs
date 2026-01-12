@@ -11,5 +11,7 @@ namespace GoogleDriveSync
         public required string Index { get; set; }
         public required string FilePath { get; set; }
         public required string Url { get; set; }
+
+        public bool Enable { get; set; }
     }
 }

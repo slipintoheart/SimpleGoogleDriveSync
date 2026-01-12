@@ -229,6 +229,7 @@
                 </DataGrid.Resources>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="序号" Width="10" IsReadOnly="True" CanUserSort="False" CanUserReorder="False" Binding="{Binding Index}" MinWidth="50"/>
+                    <DataGridCheckBoxColumn CanUserResize="False" Header="启用" Width="50" MinWidth="30" Binding="{Binding Enable}"/>
                     <DataGridTextColumn Header="本地文件路径" Width="*" CanUserSort="False" CanUserReorder="False" Binding="{Binding FilePath}"/>
                     <DataGridTextColumn Header="Google Drive URL" Width="*" CanUserSort="False" CanUserReorder="False" Binding="{Binding Url}"/>
                 </DataGrid.Columns>

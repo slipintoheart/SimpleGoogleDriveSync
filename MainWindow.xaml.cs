@@ -52,6 +52,13 @@ namespace GoogleDriveSync
         }
         #endregion
 
+        #region ButtonAnimation
+
+        
+
+        #endregion
+
+
         #region ButtonEvent
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
@@ -60,6 +67,7 @@ namespace GoogleDriveSync
                 Index = (fileSyncItems.Count + 1).ToString(),
                 FilePath = "",
                 Url = "https://",
+                Enable=true,
             };
             fileSyncItems.Add(newItem);
         }
@@ -78,14 +86,14 @@ namespace GoogleDriveSync
         {
             SetButtonsActive(false);
 
-            int totalFolders = fileSyncItems.Count;
+            int totalFolders = fileSyncItems.Count(x=>x.Enable);
             Progress.Maximum = totalFolders;
             UpdateProgressSmoothly(0);
             int currentFolderIndex = 0;
 
             ProgressText.Content = $"准备开始：共{totalFolders}个文件夹需要同步";
 
-            foreach (var item in fileSyncItems)
+            foreach (var item in fileSyncItems.Where(x=>x.Enable))
             {
                 currentFolderIndex++;
                 if (string.IsNullOrEmpty(item.FilePath) || string.IsNullOrEmpty(item.Url))
@@ -159,14 +167,14 @@ namespace GoogleDriveSync
         {
             SetButtonsActive(false);
 
-            int totalFolders = fileSyncItems.Count;
+            int totalFolders = fileSyncItems.Count(x => x.Enable);
             Progress.Maximum = totalFolders;
             UpdateProgressSmoothly(0);
             int currentFolderIndex = 0;
 
             ProgressText.Content = $"准备开始：共{totalFolders}个文件夹需要同步";
 
-            foreach (var item in fileSyncItems)
+            foreach (var item in fileSyncItems.Where(x=>x.Enable))
             {
                 currentFolderIndex++;
 
