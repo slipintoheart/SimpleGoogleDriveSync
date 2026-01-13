@@ -1,4 +1,5 @@
 # Simple Google Drive Sync Tool
+# GoogleDrive一键同步工具
 
 这是一个基于 **WPF** 框架构建的简单Google 云端硬盘同步工具，可以一键同步本地文件夹和云端文件夹。
 
