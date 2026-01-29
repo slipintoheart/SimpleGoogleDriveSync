@@ -15,6 +15,7 @@
     <None Remove="Img\Button_LogIn.png" />
     <None Remove="Img\Button_Save.png" />
     <None Remove="Img\Button_Upload.png" />
+    <None Remove="Img\Sync.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +43,7 @@
     <Resource Include="Img\Button_Upload.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Img\Sync.png" />
   </ItemGroup>
 
   <ItemGroup>

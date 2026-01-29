@@ -134,7 +134,7 @@ namespace GoogleDriveSync.GoogleDriveHandle
             return resultList;
         }
 
-        #region AnalyzeDifference Common Methods
+        #region Get Map Result
         static async Task<Dictionary<(string filePath, string fileName), (string MD5, long Size)>> GetLocalMapResult(string localFolderPath, bool isIncludingSubfolders = false)
         {
             if (!Directory.Exists(localFolderPath))
@@ -165,7 +165,7 @@ namespace GoogleDriveSync.GoogleDriveHandle
         }
         #endregion
 
-
+        #region deal with files
         public static async Task DeleteCloudFile(DriveService service, string folderId)
         {
             if (string.IsNullOrEmpty(folderId)) return;
@@ -247,6 +247,8 @@ namespace GoogleDriveSync.GoogleDriveHandle
                 MessageBox.Show($"Download Failed:{ex.Message}");
             }
         }
+
+        #endregion
 
         #region private methods
 
@@ -445,8 +447,15 @@ namespace GoogleDriveSync.GoogleDriveHandle
             return currentParentId;
         }
 
+        static DateTime GetUTCSeconds(DateTime dt)
+        {
+            var utc=dt.Kind==DateTimeKind.Local? dt.ToUniversalTime() : dt;
+            return new DateTime(utc.Year,utc.Month,utc.Day,utc.Hour,utc.Minute,utc.Second,DateTimeKind.Utc);
+        }
         #endregion
     }
+
+
 
     public class SyncDiffItem
     {

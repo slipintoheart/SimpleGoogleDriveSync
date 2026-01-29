@@ -228,27 +228,12 @@
                     </Style>
                 </DataGrid.Resources>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="序号" Width="10" IsReadOnly="True" CanUserSort="False" CanUserReorder="False" Binding="{Binding Index}" MinWidth="50"/>
-                    <DataGridCheckBoxColumn CanUserResize="False" Header="启用" Width="50" MinWidth="30" Binding="{Binding Enable}"/>
-                    <DataGridTextColumn Header="本地文件路径" Width="*" CanUserSort="False" CanUserReorder="False" Binding="{Binding FilePath}"/>
-                    <DataGridTextColumn Header="Google Drive URL" Width="*" CanUserSort="False" CanUserReorder="False" Binding="{Binding Url}"/>
+                    <DataGridTextColumn Header="No." Width="10" IsReadOnly="True" CanUserSort="False" CanUserReorder="False" Binding="{Binding Index}" MinWidth="50"/>
+                    <DataGridCheckBoxColumn CanUserResize="False" Header="   √" Width="50" MinWidth="30" Binding="{Binding Enable}"/>
+                    <DataGridTextColumn Header="Local Folder Path" Width="*" CanUserSort="False" CanUserReorder="False" Binding="{Binding FilePath}"/>
+                    <DataGridTextColumn Header="Google Drive Folder URL" Width="*" CanUserSort="False" CanUserReorder="False" Binding="{Binding Url}"/>
                 </DataGrid.Columns>
             </DataGrid>
-            <Button Style="{DynamicResource ButtonStyle}" x:Name="UploadButton" Click="UploadButton_Click" Margin="0,0,35,20" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="{DynamicResource ButtonWidth}" Height="{DynamicResource ButtonWidth}" Foreground="{x:Null}" BorderBrush="{x:Null}" Background="{DynamicResource ButtonBackground}">
-                <Image HorizontalAlignment="Left" VerticalAlignment="Top" Width="{DynamicResource ImageWidth}" Height="{DynamicResource ImageWidth}" Source="/Img/Button_Upload.png"/>
-            </Button>
-            <Button x:Name="DownloadButton" Click="DownloadButton_Click" Width="{DynamicResource ButtonWidth}" Height="{DynamicResource ButtonWidth}" Margin="0,0,120,20" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="{x:Null}" Style="{DynamicResource ButtonStyle}" Background="{DynamicResource ButtonBackground}">
-                <Image Height="{DynamicResource ImageWidth}" Width="{DynamicResource ImageWidth}" HorizontalAlignment="Left" VerticalAlignment="Top" Source="/Img/Button_Download.png"/>
-            </Button>
-            <Button Style="{DynamicResource AddRemoveButtonStyle}" Background="{DynamicResource AddRemoveButtonBackground}" x:Name="RemoveButton" Content="-" Click="RemoveButton_Click" Width="30" Height="30" Margin="0,0,0,60" HorizontalAlignment="Left" VerticalAlignment="Bottom" Foreground="White">
-            </Button>
-            <Button x:Name="AddButton" Content="+" Click="AddButton_Click" Width="30" Height="30" Margin="30,0,0,60" HorizontalAlignment="Left" VerticalAlignment="Bottom" Foreground="White" Background="{DynamicResource AddRemoveButtonBackground}" Style="{DynamicResource AddRemoveButtonStyle}"/>
-            <Button x:Name="SaveButton" Click="SaveButton_Click" Width="{DynamicResource ButtonWidth}" Height="{DynamicResource ButtonWidth}" Margin="0,0,205,20" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="{x:Null}" Style="{DynamicResource ButtonStyle}" Background="{DynamicResource ButtonBackground}">
-                <Image Height="{DynamicResource ImageWidth}" Width="{DynamicResource ImageWidth}" HorizontalAlignment="Left" VerticalAlignment="Top" Source="/Img/Button_Save.png"/>
-            </Button>
-            <Button x:Name="LogInButton" Click="LogInButton_Click" Width="{DynamicResource ButtonWidth}" Height="{DynamicResource ButtonWidth}" Margin="0,0,290,20" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="{x:Null}" Style="{DynamicResource ButtonStyle}" Background="{DynamicResource ButtonBackground}">
-                <Image Height="{DynamicResource ImageWidth}" Width="{DynamicResource ImageWidth}" HorizontalAlignment="Left" VerticalAlignment="Top" Source="/Img/Button_LogIn.png"/>
-            </Button>
             <ProgressBar x:Name="Progress" Height="8" VerticalAlignment="Bottom" Background="#FF585858" BorderBrush="#FF454545">
                 <ProgressBar.Foreground>
                     <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
@@ -271,6 +256,26 @@
                 <Button.Background>
                     <ImageBrush ImageSource="/Img/Button_BackGround.png"/>
                 </Button.Background>
+            </Button>
+            <Button Style="{DynamicResource AddRemoveButtonStyle}" Background="{DynamicResource AddRemoveButtonBackground}" x:Name="RemoveButton" Content="-" Click="RemoveButton_Click" Width="30" Height="30" Margin="0,0,0,60" HorizontalAlignment="Left" VerticalAlignment="Bottom" Foreground="White"/>
+            <Button x:Name="AddButton" Content="+" Click="AddButton_Click" Width="30" Height="30" Margin="30,0,0,60" HorizontalAlignment="Left" VerticalAlignment="Bottom" Foreground="White" Background="{DynamicResource AddRemoveButtonBackground}" Style="{DynamicResource AddRemoveButtonStyle}"/>
+            <Button x:Name="LogInButton" Click="LogInButton_Click" Width="{DynamicResource ButtonWidth}" Height="{DynamicResource ButtonWidth}" Margin="0,0,390,20" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="{x:Null}" Style="{DynamicResource ButtonStyle}" Background="{DynamicResource ButtonBackground}">
+                <Image Height="{DynamicResource ImageWidth}" Width="{DynamicResource ImageWidth}" HorizontalAlignment="Left" VerticalAlignment="Top" Source="/Img/Button_LogIn.png"/>
+            </Button>
+            <Button x:Name="SaveButton" Click="SaveButton_Click" Width="{DynamicResource ButtonWidth}" Height="{DynamicResource ButtonWidth}" Margin="0,0,305,20" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="{x:Null}" Style="{DynamicResource ButtonStyle}" Background="{DynamicResource ButtonBackground}">
+                <Image Height="{DynamicResource ImageWidth}" Width="{DynamicResource ImageWidth}" HorizontalAlignment="Left" VerticalAlignment="Top" Source="/Img/Button_Save.png"/>
+            </Button>
+            <Button x:Name="DownloadButton" Click="DownloadButton_Click" Width="{DynamicResource ButtonWidth}" Height="{DynamicResource ButtonWidth}" Margin="0,0,220,20" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="{x:Null}" Style="{DynamicResource ButtonStyle}" Background="{DynamicResource ButtonBackground}">
+                <Image Height="{DynamicResource ImageWidth}" Width="{DynamicResource ImageWidth}" HorizontalAlignment="Left" VerticalAlignment="Top" Source="/Img/Button_Download.png"/>
+            </Button>
+            <Button Style="{DynamicResource ButtonStyle}" x:Name="UploadButton" Click="UploadButton_Click" Margin="0,0,135,20" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="{DynamicResource ButtonWidth}" Height="{DynamicResource ButtonWidth}" Foreground="{x:Null}" BorderBrush="{x:Null}" Background="{DynamicResource ButtonBackground}">
+                <Image HorizontalAlignment="Left" VerticalAlignment="Top" Width="{DynamicResource ImageWidth}" Height="{DynamicResource ImageWidth}" Source="/Img/Button_Upload.png"/>
+            </Button>
+            <Button Style="{DynamicResource ButtonStyle}" x:Name="SyncAfterCompare" Click="SyncAfterCompareButton_Click" Margin="0,0,50,20" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="{DynamicResource ButtonWidth}" Height="{DynamicResource ButtonWidth}" Foreground="{x:Null}" BorderBrush="{x:Null}">
+                <Button.Background>
+                    <ImageBrush ImageSource="/Img/Button_BackGround.png"/>
+                </Button.Background>
+                <Image HorizontalAlignment="Left" VerticalAlignment="Top" Width="{DynamicResource ImageWidth}" Height="{DynamicResource ImageWidth}" Source="/Img/Sync.png"/>
             </Button>
 
         </Grid>

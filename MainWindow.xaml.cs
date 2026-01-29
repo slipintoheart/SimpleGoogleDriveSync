@@ -91,7 +91,7 @@ namespace GoogleDriveSync
             UpdateProgressSmoothly(0);
             int currentFolderIndex = 0;
 
-            ProgressText.Content = $"准备开始：共{totalFolders}个文件夹需要同步";
+            ProgressText.Content = $"Start up: {totalFolders} folders need sync totally";
 
             foreach (var item in fileSyncItems.Where(x=>x.Enable))
             {
@@ -102,13 +102,13 @@ namespace GoogleDriveSync
                 }
                 try
                 {
-                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在校验文件差异...";
+                    ProgressText.Content = $"Syncing folder {currentFolderIndex}/{totalFolders}: Verifying differences...";
                     var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url, IsIncludesSubfoldersCheckBox.IsChecked == true, true);
                     string parentid = DriveHelper.GetFolderIDFromURL(item.Url);
 
                     int totalDiffs = diffList.Count;
                     int currentDiffs = 0;
-                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在上传第{currentDiffs}/{totalDiffs}个差异文件：";
+                    ProgressText.Content = $"Syncing folder {currentFolderIndex}/{totalFolders}: Uploading Folder{currentDiffs}/{totalDiffs}...";
                     foreach (var diff in diffList)
                     {
                         if (diff.Status == EStatus.Same) continue;
@@ -119,7 +119,7 @@ namespace GoogleDriveSync
                             {
                                 long compeletedMB = (long)(completed / 1024.0 / 1024.0);
                                 long totalMB = (long)(total / 1024.0 / 1024.0);
-                                ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在上传第{currentDiffs}/{totalDiffs}个差异文件：{compeletedMB}MB/{totalMB}MB";
+                                ProgressText.Content = $"Syncing folder {currentFolderIndex}/{totalFolders}: Uploading Folder{currentDiffs}/{totalDiffs}: {compeletedMB}MB/{totalMB}MB...";
                                 if (totalMB > 0 )
                                 {
                                     UpdateProgressSmoothly((currentFolderIndex - 1) +
@@ -159,7 +159,7 @@ namespace GoogleDriveSync
                 UpdateProgressSmoothly(currentFolderIndex);
             }
             UpdateProgressSmoothly(totalFolders);
-            ProgressText.Content = "所有文件夹同步完成!";
+            ProgressText.Content = "All folders synced.";
             SetButtonsActive(true);
         }
 
@@ -172,7 +172,7 @@ namespace GoogleDriveSync
             UpdateProgressSmoothly(0);
             int currentFolderIndex = 0;
 
-            ProgressText.Content = $"准备开始：共{totalFolders}个文件夹需要同步";
+            ProgressText.Content = $"Start up: {totalFolders} folders need sync totally";
 
             foreach (var item in fileSyncItems.Where(x=>x.Enable))
             {
@@ -184,13 +184,13 @@ namespace GoogleDriveSync
                 }
                 try
                 {
-                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在校验文件差异...";
+                    ProgressText.Content = $"Syncing folder {currentFolderIndex}/{totalFolders}: Verifying differences...";
                     var diffList = await DriveHelper.AnalyzeDifferences(service, item.FilePath, item.Url, IsIncludesSubfoldersCheckBox.IsChecked == true, false);
                     string parentid = DriveHelper.GetFolderIDFromURL(item.Url);
 
                     int totalDiffs = diffList.Count;
                     int currentDiffs = 0;
-                    ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在下载第{currentDiffs}/{totalDiffs}个差异文件：";
+                    ProgressText.Content = $"Syncing folder {currentFolderIndex}/{totalFolders}: Downloading Folder{currentDiffs}/{totalDiffs}...";
                     foreach (var diff in diffList)
                     {
                         if (diff.Status == EStatus.Same) continue;
@@ -202,7 +202,7 @@ namespace GoogleDriveSync
                                 long compeletedMB = (long)(completed / 1024.0 / 1024.0);
                                 long totalMB = (long)(total / 1024.0 / 1024.0);
 
-                                ProgressText.Content = $"正在同步第{currentFolderIndex}/{totalFolders}个文件夹：正在下载第{currentDiffs}/{totalDiffs}个差异文件：{compeletedMB}MB/{totalMB}MB";
+                                ProgressText.Content = $"Syncing folder {currentFolderIndex}/{totalFolders}: Downloading Folder{currentDiffs}/{totalDiffs}: {compeletedMB}MB/{totalMB}MB...";
 
                                 if (totalMB > 0)
                                 {
@@ -250,10 +250,14 @@ namespace GoogleDriveSync
                 UpdateProgressSmoothly(currentFolderIndex);
             }
             UpdateProgressSmoothly(totalFolders);
-            ProgressText.Content = "所有文件夹同步完成!";
+            ProgressText.Content = "All folders synced.";
             SetButtonsActive(true);
         }
 
+        private void SyncAfterCompareButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
 
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -279,6 +283,7 @@ namespace GoogleDriveSync
         {
             LogIn();
         }
+
         #endregion
 
         #region Common Methods
